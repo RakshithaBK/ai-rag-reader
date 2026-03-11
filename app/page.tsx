@@ -1,65 +1,150 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import { useChat } from '@ai-sdk/react';
+import { DefaultChatTransport } from 'ai'; // Added this import for V5!
+import { useState, useRef } from 'react';
+
+export default function ChatDashboard() {
+  // 1. We now manage the input state manually
+  const [input, setInput] = useState('');
+
+  // 2. useChat now requires a 'transport' and returns 'sendMessage' and 'status'
+  const { messages, sendMessage, status } = useChat({
+    transport: new DefaultChatTransport({
+      api: '/api/chat', 
+    }),
+  });
+
+  // Local state for the file upload
+  const [file, setFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setFile(e.target.files[0]);
+    }
+  };
+
+ const handleUpload = async () => {
+    if (!file) return;
+    setIsUploading(true);
+
+    try {
+      // Package the file securely
+      const formData = new FormData();
+      formData.append('file', file);
+
+      // Send it to the API route we just built
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (response.ok) {
+        alert('File successfully processed and saved to Pinecone!');
+      } else {
+        alert('Upload failed. Check console for details.');
+      }
+    } catch (error) {
+      console.error('Upload error:', error);
+      alert('An error occurred during upload.');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  // 3. We create our own submit handler
+  const onSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (input.trim()) {
+      sendMessage({ text: input }); // Send the message
+      setInput(''); // Clear the input box
+    }
+  };
+
+  // 4. Derive loading state from the new 'status' variable
+  const isThinking = status === 'submitted' || status === 'streaming';
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <div className="flex flex-col h-screen max-w-3xl mx-auto p-4 bg-gray-50">
+      
+      {/* Header & File Upload */}
+      <div className="flex items-center justify-between p-4 bg-white rounded-lg shadow-sm border mb-4">
+        <div>
+          <h1 className="text-xl font-bold text-gray-800">AI PDF Assistant</h1>
+          <p className="text-sm text-gray-500">Powered by Gemini & Next.js</p>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <input 
+            type="file" 
+            accept="application/pdf" 
+            className="hidden" 
+            ref={fileInputRef}
+            onChange={handleFileChange}
+          />
+          <button 
+            onClick={() => fileInputRef.current?.click()}
+            className="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition"
+          >
+            {file ? file.name : 'Select PDF'}
+          </button>
+          
+          <button 
+            onClick={handleUpload}
+            disabled={!file || isUploading}
+            className="px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-blue-300 transition"
+          >
+            {isUploading ? 'Processing...' : 'Upload Data'}
+          </button>
+        </div>
+      </div>
+
+      {/* Chat Messages */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-white rounded-lg shadow-sm border mb-4">
+        {messages.length === 0 ? (
+          <div className="text-center text-gray-400 mt-20">
+            No messages yet. Say hello!
+          </div>
+        ) : (
+          messages.map((m) => (
+            <div key={m.id} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+              <div className={`max-w-[80%] p-3 rounded-lg ${m.role === 'user' ? 'bg-blue-600 text-white rounded-br-none' : 'bg-gray-100 text-gray-800 rounded-bl-none'}`}>
+                <span className="font-bold text-xs uppercase opacity-70 block mb-1">
+                  {m.role === 'user' ? 'You' : 'AI'}
+                </span>
+                {/* 5. In V5, messages are broken into 'parts' */}
+                {m.parts.map((part, index) => 
+                  part.type === 'text' ? <span key={index}>{part.text}</span> : null
+                )}
+              </div>
+            </div>
+          ))
+        )}
+        {isThinking && (
+          <div className="text-gray-400 text-sm animate-pulse">Thinking...</div>
+        )}
+      </div>
+
+      {/* Chat Input */}
+      <form onSubmit={onSubmit} className="flex gap-2">
+        <input
+          className="flex-1 p-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          placeholder="Ask a question..."
+          disabled={isThinking}
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+        <button 
+          type="submit" 
+          disabled={isThinking || !input.trim()}
+          className="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg shadow-sm hover:bg-blue-700 disabled:bg-blue-300 transition"
+        >
+          Send
+        </button>
+      </form>
+      
     </div>
   );
 }
