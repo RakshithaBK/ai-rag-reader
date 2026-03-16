@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { Pinecone } from '@pinecone-database/pinecone';
-import { embedMany, Output } from 'ai';
+import { embedMany } from 'ai';
 import { google } from '@ai-sdk/google';
 import { RecursiveCharacterTextSplitter } from '@langchain/textsplitters';
 import { extractText, getDocumentProxy } from 'unpdf';

@@ -55,13 +55,26 @@ export default function ChatDashboard() {
   };
 
   // 3. We create our own submit handler
-  const onSubmit = (e: React.FormEvent) => {
+  const onSubmit = async (e: React.SubmitEvent) => {
     e.preventDefault();
     if (input.trim()) {
-      sendMessage({ text: input }); // Send the message
+      const message = input;
       setInput(''); // Clear the input box
+      await callGeminiWithRetry(() => sendMessage({ text: message }));
     }
   };
+
+   //Implement to call this method callGeminiWithRetry
+  const callGeminiWithRetry = async (fn: () => Promise<unknown>, retries = 3, delay = 1000) => {
+    try {
+      return await fn();
+    } catch (error) {
+      if (retries <= 0) throw error;
+      await new Promise((resolve) => setTimeout(resolve, delay));
+      return callGeminiWithRetry(fn, retries - 1, delay * 2);
+    }
+  };
+  
 
   // 4. Derive loading state from the new 'status' variable
   const isThinking = status === 'submitted' || status === 'streaming';
@@ -130,7 +143,7 @@ export default function ChatDashboard() {
       {/* Chat Input */}
       <form onSubmit={onSubmit} className="flex gap-2">
         <input
-          className="flex-1 p-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="flex-1 p-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Ask a question..."
