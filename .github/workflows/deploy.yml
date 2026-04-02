@@ -63,6 +63,10 @@ jobs:
           task-definition: task-definition.json
           container-name: ${{ env.CONTAINER_NAME }}
           image: ${{ steps.build-image.outputs.image }}
+          environment-variables: |
+            GOOGLE_GENERATIVE_AI_API_KEY=${{ secrets.GOOGLE_GENERATIVE_AI_API_KEY }}
+            PINECONE_API_KEY=${{ secrets.PINECONE_API_KEY }}
+            PINECONE_INDEX_NAME=${{ secrets.PINECONE_INDEX_NAME }}
 
       - name: Deploy updated task definition to ECS
         if: github.event_name == 'push'
