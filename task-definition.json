@@ -19,7 +19,7 @@
       "environment": [
         {
           "name": "NODE_ENV",
-          "value": "production"
+          "value": "development"
         },
         { "name": "GOOGLE_GENERATIVE_AI_API_KEY",  "value": "PLACEHOLDER" },
         { "name": "PINECONE_API_KEY",  "value": "PLACEHOLDER" },
