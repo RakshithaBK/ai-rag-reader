@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { Pinecone } from '@pinecone-database/pinecone';
 import { embedMany } from 'ai';
-import { google } from '@ai-sdk/google';
+import { voyage } from 'voyage-ai-provider';
 import { RecursiveCharacterTextSplitter } from '@langchain/textsplitters';
 import { extractText, getDocumentProxy } from 'unpdf';
 
@@ -28,7 +28,7 @@ export async function POST(req: Request) {
 
     // 3. Embed with Gemini
     const { embeddings } = await embedMany({
-      model: google.embedding('gemini-embedding-001'),
+      model: voyage.textEmbeddingModel('voyage-3'),
       values: texts,
     });
 
@@ -50,6 +50,7 @@ export async function POST(req: Request) {
     });
   } catch (error) {
     console.error('Error processing PDF:', error);
-    return NextResponse.json({ error: 'Failed to process PDF' }, { status: 500 });
+    const message = error instanceof Error ? error.message : String(error);
+    return NextResponse.json({ error: 'Failed to process PDF', details: message }, { status: 500 });
   }
 }

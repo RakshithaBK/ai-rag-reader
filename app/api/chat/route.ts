@@ -1,12 +1,12 @@
 import { streamText, convertToModelMessages } from 'ai';
-import { google } from '@ai-sdk/google';
+import { anthropic } from '@ai-sdk/anthropic';
 
 export async function POST(req: Request) {
   try {
     const { messages } = await req.json();
 
     const result = streamText({
-      model: google('gemini-2.0-flash'),
+      model: anthropic('claude-sonnet-4-6'),
       messages: await convertToModelMessages(messages),
       system: "You are a helpful AI assistant. For now, just have a normal conversation with the user.",
     });

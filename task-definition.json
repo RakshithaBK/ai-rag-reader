@@ -21,7 +21,8 @@
           "name": "NODE_ENV",
           "value": "development"
         },
-        { "name": "GOOGLE_GENERATIVE_AI_API_KEY",  "value": "PLACEHOLDER" },
+        { "name": "ANTHROPIC_API_KEY",  "value": "PLACEHOLDER" },
+        { "name": "VOYAGE_API_KEY",  "value": "PLACEHOLDER" },
         { "name": "PINECONE_API_KEY",  "value": "PLACEHOLDER" },
         { "name": "PINECONE_INDEX_NAME",  "value": "PLACEHOLDER" }
       ],
