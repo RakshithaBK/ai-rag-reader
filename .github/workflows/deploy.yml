@@ -9,7 +9,7 @@ on:
       - main
 
 env:
-  AWS_REGION: eu-west-1                        # change to your region
+  AWS_REGION: ap-south-1                        # change to your region
   ECR_REPOSITORY: ai-rag-reader                # change to your ECR repo name
   ECS_CLUSTER: ai-reader                      # change to your ECS cluster name
   ECS_SERVICE: ai-rag-reader-service               # change to your ECS service name
