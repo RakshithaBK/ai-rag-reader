@@ -8,7 +8,7 @@
   "containerDefinitions": [
     {
       "name": "ai-rag-reader-container",
-      "image": "167497310662.dkr.ecr.eu-west-1.amazonaws.com/ai-rag-reader:latest",
+      "image": "167497310662.dkr.ecr.ap-south-1.amazonaws.com/ai-rag-reader:latest",
       "portMappings": [
         {
           "containerPort": 3000,
@@ -29,7 +29,7 @@
         "logDriver": "awslogs",
         "options": {
           "awslogs-group": "/ecs/ai-rag-reader",
-          "awslogs-region": "eu-west-1",
+          "awslogs-region": "ap-south-1",
           "awslogs-stream-prefix": "ecs"
         }
       },
