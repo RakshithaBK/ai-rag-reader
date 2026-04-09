@@ -1,0 +1,46 @@
+{
+  "family": "ai-rag-reader-service",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "512",
+  "memory": "1024",
+  "executionRoleArn": "arn:aws:iam::167497310662:role/ecsTaskExecutionRole",
+  "containerDefinitions": [
+    {
+      "name": "ai-rag-reader-container",
+      "image": "167497310662.dkr.ecr.ap-south-1.amazonaws.com/ai-rag-reader:latest",
+      "portMappings": [
+        {
+          "containerPort": 3000,
+          "protocol": "tcp"
+        }
+      ],
+      "essential": true,
+      "environment": [
+        {
+          "name": "NODE_ENV",
+          "value": "development"
+        },
+        { "name": "ANTHROPIC_API_KEY",  "value": "PLACEHOLDER" },
+        { "name": "VOYAGE_API_KEY",  "value": "PLACEHOLDER" },
+        { "name": "PINECONE_API_KEY",  "value": "PLACEHOLDER" },
+        { "name": "PINECONE_INDEX_NAME",  "value": "PLACEHOLDER" }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/ai-rag-reader",
+          "awslogs-region": "ap-south-1",
+          "awslogs-stream-prefix": "ecs"
+        }
+      },
+      "healthCheck": {
+        "command": ["CMD-SHELL", "curl -f http://localhost:3000/ || exit 1"],
+        "interval": 30,
+        "timeout": 5,
+        "retries": 3,
+        "startPeriod": 60
+      }
+    }
+  ]
+}
